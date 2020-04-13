@@ -86,6 +86,10 @@ SimControlPanel::SimControlPanel(QWidget* parent)
   updateUiEnable();  // enable/disable buttons as needed.
   updateTerrainLabel(); // display name of loaded terrain file
 
+  // set radio button defaults for fewer button presses
+  ui->s2Button->setChecked(true);
+  ui->simulatorButton->setChecked(true);
+
   // attempt to load default user settings.
   _loadedUserSettings = true;
 
