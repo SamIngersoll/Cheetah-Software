@@ -350,6 +350,8 @@ void SimControlPanel::on_startButton_clicked() {
     robotType = RobotType::CHEETAH_3;
   } else if (ui->miniCheetahButton->isChecked()) {
     robotType = RobotType::MINI_CHEETAH;
+  } else if (ui->s2Button->isChecked()) {
+    robotType = RobotType::S2;
   } else {
     createErrorMessage("Error: you must select a robot");
     return;

@@ -101,6 +101,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QRadioButton" name="s2Button">
+            <property name="text">
+             <string>S2</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
