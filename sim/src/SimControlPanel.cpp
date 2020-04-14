@@ -7,6 +7,7 @@
 #include "ui_SimControlPanel.h"
 #include "JoystickTest.h"
 
+#include "Dynamics/Quadruped.h"
 
 /*!
  * Display an error messagebox with the given text
@@ -243,7 +244,7 @@ void SimControlPanel::handleSpiDebug(const lcm::ReceiveBuffer *rbuf, const std::
   MiniCheetahDebugData ddata;
 
   u32 idx = 0;
-  for(u32 leg = 0; leg < 4; leg++) {
+  for(u32 leg = 0; leg < cheetah::max_num_leg; leg++) {
     for(u32 joint = 0; joint < 3; joint++) {
       ddata.p[leg][joint] = msg->q[idx];
       ddata.v[leg][joint] = msg->qd[idx];
@@ -258,8 +259,8 @@ void SimControlPanel::handleSpiDebug(const lcm::ReceiveBuffer *rbuf, const std::
     leg_control_command_lcmt lcm_cmd;
     memset(&lcm_cmd, 0, sizeof(leg_control_command_lcmt));
     idx = 0;
-    for(u32 leg = 0; leg < 4; leg++) {
-      for(u32 joint = 0; joint < 3; joint++) {
+    for(u32 leg = 0; leg < cheetah::max_num_leg; leg++) {
+      for(u32 joint = 0; joint < cheetah::max_num_leg_joint; joint++) {
         if(cmd.enable[leg][joint]) {
           lcm_cmd.q_des[idx] = cmd.qd[leg][joint];
           lcm_cmd.kp_joint[idx] = cmd.kp[leg][joint];
@@ -349,7 +350,7 @@ void SimControlPanel::errorCallback(std::string errorMessage) {
 void SimControlPanel::on_startButton_clicked() {
   // get robot type
   RobotType robotType;
-
+  
   if (ui->cheetah3Button->isChecked()) {
     robotType = RobotType::CHEETAH_3;
   } else if (ui->miniCheetahButton->isChecked()) {

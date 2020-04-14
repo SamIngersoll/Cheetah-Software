@@ -8,7 +8,7 @@
 template <typename T>
 BodyPostureTask<T>::BodyPostureTask(const FloatingBaseModel<T> * robot) : 
   Task<T>(6), _robot_sys(robot) {
-  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::dim_config);
+  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::max_dim_config);
   TK::Jt_.block(0, 0, 6, 6).setIdentity();
   TK::JtDotQdot_ = DVec<T>::Zero(TK::dim_task_);
 

@@ -4,19 +4,19 @@
 
 template<typename T>
 WBC_Ctrl<T>::WBC_Ctrl(FloatingBaseModel<T> model):
-  _full_config(cheetah::num_act_joint + 7),
-  _tau_ff(cheetah::num_act_joint),
-  _des_jpos(cheetah::num_act_joint),
-  _des_jvel(cheetah::num_act_joint),
+  _full_config(cheetah::max_num_act_joint + 7),
+  _tau_ff(cheetah::max_num_act_joint),
+  _des_jpos(cheetah::max_num_act_joint),
+  _des_jvel(cheetah::max_num_act_joint),
   _wbcLCM(getLcmUrl(255))
 {
   _iter = 0;
   _full_config.setZero();
 
   _model = model;
-  _kin_wbc = new KinWBC<T>(cheetah::dim_config);
+  _kin_wbc = new KinWBC<T>(cheetah::max_dim_config);
 
-  _wbic = new WBIC<T>(cheetah::dim_config, &(_contact_list), &(_task_list));
+  _wbic = new WBIC<T>(cheetah::max_dim_config, &(_contact_list), &(_task_list));
   _wbic_data = new WBIC_ExtraData<T>();
 
   _wbic_data->_W_floating = DVec<T>::Constant(6, 0.1);
@@ -24,14 +24,14 @@ WBC_Ctrl<T>::WBC_Ctrl(FloatingBaseModel<T> model):
   //_wbic_data->_W_floating[5] = 0.1;
   _wbic_data->_W_rf = DVec<T>::Constant(12, 1.);
 
-  _Kp_joint.resize(cheetah::num_leg_joint, 5.);
-  _Kd_joint.resize(cheetah::num_leg_joint, 1.5);
+  _Kp_joint.resize(cheetah::max_num_leg_joint, 5.);
+  _Kd_joint.resize(cheetah::max_num_leg_joint, 1.5);
 
-  //_Kp_joint_swing.resize(cheetah::num_leg_joint, 10.);
-  //_Kd_joint_swing.resize(cheetah::num_leg_joint, 1.5);
+  //_Kp_joint_swing.resize(cheetah::max_num_leg_joint, 10.);
+  //_Kd_joint_swing.resize(cheetah::max_num_leg_joint, 1.5);
 
-  _state.q = DVec<T>::Zero(cheetah::num_act_joint);
-  _state.qd = DVec<T>::Zero(cheetah::num_act_joint);
+  _state.q = DVec<T>::Zero(cheetah::max_num_act_joint);
+  _state.qd = DVec<T>::Zero(cheetah::max_num_act_joint);
 }
 
 template<typename T>
@@ -104,12 +104,12 @@ void WBC_Ctrl<T>::_UpdateLegCMD(ControlFSMData<T> & data){
   LegControllerCommand<T> * cmd = data._legController->commands;
   //Vec4<T> contact = data._stateEstimator->getResult().contactEstimate;
 
-  for (size_t leg(0); leg < cheetah::num_leg; ++leg) {
+  for (size_t leg(0); leg < cheetah::max_num_leg; ++leg) {
     cmd[leg].zero();
-    for (size_t jidx(0); jidx < cheetah::num_leg_joint; ++jidx) {
-      cmd[leg].tauFeedForward[jidx] = _tau_ff[cheetah::num_leg_joint * leg + jidx];
-      cmd[leg].qDes[jidx] = _des_jpos[cheetah::num_leg_joint * leg + jidx];
-      cmd[leg].qdDes[jidx] = _des_jvel[cheetah::num_leg_joint * leg + jidx];
+    for (size_t jidx(0); jidx < cheetah::max_num_leg_joint; ++jidx) {
+      cmd[leg].tauFeedForward[jidx] = _tau_ff[cheetah::max_num_leg_joint * leg + jidx];
+      cmd[leg].qDes[jidx] = _des_jpos[cheetah::max_num_leg_joint * leg + jidx];
+      cmd[leg].qdDes[jidx] = _des_jvel[cheetah::max_num_leg_joint * leg + jidx];
 
         cmd[leg].kpJoint(jidx, jidx) = _Kp_joint[jidx];
         cmd[leg].kdJoint(jidx, jidx) = _Kd_joint[jidx];

@@ -11,7 +11,7 @@
 template <typename T>
 BodyRyRzTask<T>::BodyRyRzTask(const FloatingBaseModel<T>* robot)
     : Task<T>(2), _robot_sys(robot) {
-  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::dim_config);
+  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::max_dim_config);
   TK::Jt_.block(0, 1, 2, 2).setIdentity();
   TK::JtDotQdot_ = DVec<T>::Zero(TK::dim_task_);
 

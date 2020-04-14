@@ -1,5 +1,5 @@
-/*! @file MiniCheetah.h
- *  @brief Utility function to build a Mini Cheetah Quadruped object
+/*! @file S2.h
+ *  @brief Utility function to build a S2 biped object
  *
  * This file is based on MiniCheetahFullRotorModel_mex.m and builds a model
  * of the Mini Cheetah robot.  The inertia parameters of all bodies are
@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef PROJECT_MINICHEETAH_H
-#define PROJECT_MINICHEETAH_H
+#ifndef PROJECT_S2_H
+#define PROJECT_S2_H
 
 #include "FloatingBaseModel.h"
 #include "Quadruped.h"
@@ -17,14 +17,14 @@
  * Generate a Quadruped model of Mini Cheetah
  */
 template <typename T>
-Quadruped<T> buildMiniCheetah() {
+Quadruped<T> buildS2() {
   Quadruped<T> cheetah;
-  cheetah._robotType = RobotType::MINI_CHEETAH;
+  cheetah._robotType = RobotType::S2;
 
-  cheetah.num_act_joint = 12;
-  cheetah.num_q = 19;
-  cheetah.dim_config = 18;
-  cheetah.num_leg = 4;
+  cheetah.num_act_joint = 6;
+  cheetah.num_q = 13;
+  cheetah.dim_config = 12;
+  cheetah.num_leg = 2;
   cheetah.num_leg_joint = 3;
 
   cheetah._bodyMass = 3.3;
@@ -117,4 +117,4 @@ Quadruped<T> buildMiniCheetah() {
   return cheetah;
 }
 
-#endif  // PROJECT_MINICHEETAH_H
+#endif  // PROJECT_S2_H

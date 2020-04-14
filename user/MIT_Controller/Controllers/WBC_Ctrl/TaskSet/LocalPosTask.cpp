@@ -12,7 +12,7 @@ LocalPosTask<T>::LocalPosTask(const FloatingBaseModel<T>* robot, int link_idx,
       _robot_sys(robot),
       _link_idx(link_idx),
       _local_frame_idx(local_frame_idx) {
-  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::dim_config);
+  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::max_dim_config);
   TK::JtDotQdot_ = DVec<T>::Zero(TK::dim_task_);
 
   _Kp_kin = DVec<T>::Constant(TK::dim_task_, 1.);

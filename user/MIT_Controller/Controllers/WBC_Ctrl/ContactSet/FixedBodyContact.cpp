@@ -3,7 +3,7 @@
 
 template <typename T>
 FixedBodyContact<T>::FixedBodyContact() : ContactSpec<T>(6) {
-  Contact::Jc_ = DMat<T>::Zero(Contact::dim_contact_, cheetah::dim_config);
+  Contact::Jc_ = DMat<T>::Zero(Contact::dim_contact_, cheetah::max_dim_config);
 
   for (size_t i(0); i < Contact::dim_contact_; ++i) Contact::Jc_(i, i) = 1.;
   Contact::Uf_ = DMat<T>::Zero(1, Contact::dim_contact_);

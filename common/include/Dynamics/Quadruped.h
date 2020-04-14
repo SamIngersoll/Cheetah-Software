@@ -17,18 +17,20 @@
 
 #include <eigen3/Eigen/StdVector>
 
-
+#include "cppTypes.h"
 
 /*!
  * Basic parameters for a cheetah-shaped robot
  */
 namespace cheetah {
-constexpr size_t num_act_joint = 12;
-constexpr size_t num_q = 19;
-constexpr size_t dim_config = 18;
-constexpr size_t num_leg = 4;
-constexpr size_t num_leg_joint = 3;
+  constexpr size_t max_num_act_joint = 12;
+  constexpr size_t max_num_q = 19;
+  constexpr size_t max_dim_config = 18;
+  constexpr size_t max_num_leg = 4;
+  constexpr size_t max_num_leg_joint = 3;
 }  // namespace cheetah
+
+
 
 /*!
  * Link indices for cheetah-shaped robots
@@ -69,6 +71,9 @@ class Quadruped {
   T _motorKT, _motorR, _batteryV;
   T _motorTauMax;
   T _jointDamping, _jointDryFriction;
+
+  T num_act_joint, num_q, dim_config, num_leg, num_leg_joint;
+
   SpatialInertia<T> _abadInertia, _hipInertia, _kneeInertia, _abadRotorInertia,
       _hipRotorInertia, _kneeRotorInertia, _bodyInertia;
   Vec3<T> _abadLocation, _abadRotorLocation, _hipLocation, _hipRotorLocation,

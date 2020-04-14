@@ -12,7 +12,7 @@ LinkPosTask<T>::LinkPosTask(const FloatingBaseModel<T>* robot, int link_idx,
       robot_sys_(robot),
       link_idx_(link_idx),
       virtual_depend_(virtual_depend) {
-  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::dim_config);
+  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::max_dim_config);
   TK::JtDotQdot_ = DVec<T>::Zero(TK::dim_task_);
 
   _Kp = DVec<T>::Constant(TK::dim_task_, 100.);

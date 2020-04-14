@@ -58,6 +58,8 @@ class LegController {
  public:
   LegController(Quadruped<T>& quad) : _quadruped(quad) {
     for (auto& data : datas) data.setQuadruped(_quadruped);
+    _num_legs = _quadruped.num_leg;
+    _num_act_joints = _quadruped.num_act_joint;
   }
 
   void zeroCommand();
@@ -79,6 +81,8 @@ class LegController {
   Quadruped<T>& _quadruped;
   bool _legsEnabled = false;
   T _maxTorque = 0;
+  T _num_legs;
+  T _num_act_joints;
   bool _zeroEncoders = false;
   u32 _calibrateEncoders = 0;
 };

@@ -15,7 +15,7 @@
 template <typename T>
 FSM_State_JointPD<T>::FSM_State_JointPD(ControlFSMData<T>* _controlFSMData)
     : FSM_State<T>(_controlFSMData, FSM_StateName::JOINT_PD, "JOINT_PD"),
-_ini_jpos(cheetah::num_act_joint){
+_ini_jpos(cheetah::max_num_act_joint){
   // Do nothing here yet
 }
 

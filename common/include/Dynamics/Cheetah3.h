@@ -35,6 +35,12 @@ Quadruped<T> buildCheetah3() {
   Quadruped<T> cheetah;
   cheetah._robotType = RobotType::CHEETAH_3;
 
+  cheetah.num_act_joint = 12;
+  cheetah.num_q = 19;
+  cheetah.dim_config = 18;
+  cheetah.num_leg = 4;
+  cheetah.num_leg_joint = 3;
+
   cheetah._bodyMass = 26.60;
   cheetah._bodyLength = .6;
   cheetah._bodyWidth = .256;

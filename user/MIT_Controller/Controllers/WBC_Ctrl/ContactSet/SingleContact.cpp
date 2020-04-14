@@ -7,7 +7,7 @@ SingleContact<T>::SingleContact(const FloatingBaseModel<T>* robot, int pt)
     : ContactSpec<T>(3), _max_Fz(1500.), _contact_pt(pt), _dim_U(6) {
   Contact::idx_Fz_ = 2;
   robot_sys_ = robot;
-  Contact::Jc_ = DMat<T>(Contact::dim_contact_, cheetah::dim_config);
+  Contact::Jc_ = DMat<T>(Contact::dim_contact_, cheetah::max_dim_config);
   Contact::JcDotQdot_ = DVec<T>::Zero(Contact::dim_contact_);
   Contact::Uf_ = DMat<T>::Zero(_dim_U, Contact::dim_contact_);
 

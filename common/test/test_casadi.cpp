@@ -335,8 +335,8 @@ TEST(casadi, jump_opt) {
   // Mass Matrix Test
   //FloatingBaseModel<double> cheetah = buildMiniCheetah<double>().buildModel();
   //FBModelState<double> state;
-  //state.q = DVec<double>::Zero(cheetah::num_act_joint);
-  //state.qd = DVec<double>::Zero(cheetah::num_act_joint);
+  //state.q = DVec<double>::Zero(cheetah::max_num_act_joint);
+  //state.qd = DVec<double>::Zero(cheetah::max_num_act_joint);
  
   //for(size_t i(0); i<4; ++i){
     //state.q[1 + 3*i] = -M_PI/2.;

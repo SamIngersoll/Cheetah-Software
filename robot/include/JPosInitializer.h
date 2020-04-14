@@ -33,6 +33,6 @@ class JPosInitializer {
   std::vector<T> _target_jpos;
   std::vector<T> _mid_jpos;
 
-  BS_Basic<T, cheetah::num_act_joint, 3, 1, 2, 2> _jpos_trj;
+  BS_Basic<T, cheetah::max_num_act_joint, 3, 1, 2, 2> _jpos_trj;
 };
 #endif

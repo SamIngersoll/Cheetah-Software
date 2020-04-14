@@ -6,7 +6,7 @@
 
 class JPos_Controller:public RobotController{
   public:
-    JPos_Controller():RobotController(),_jpos_ini(cheetah::num_act_joint){
+    JPos_Controller():RobotController(),_jpos_ini(cheetah::max_num_act_joint){
     _jpos_ini.setZero();
     }
     virtual ~JPos_Controller(){}

@@ -44,8 +44,13 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   // init quadruped info
   printf("[Simulation] Build quadruped...\n");
   _robot = robot;
-  _quadruped = _robot == RobotType::MINI_CHEETAH ? buildMiniCheetah<double>()
-                                                 : buildCheetah3<double>();
+  if (_robot == RobotType::MINI_CHEETAH)
+    _quadruped = buildMiniCheetah<double>();
+  else if (_robot == RobotType::CHEETAH_3) 
+    _quadruped = buildCheetah3<double>();
+  else if (_robot == RobotType::S2)
+    _quadruped = buildS2<double>();
+
   printf("[Simulation] Build actuator model...\n");
   _actuatorModels = _quadruped.buildActuatorModels();
   _window = window;
@@ -56,11 +61,20 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
     Vec4<float> truthColor, seColor;
     truthColor << 0.2, 0.4, 0.2, 0.6;
     seColor << .75,.75,.75, 1.0;
-    _simRobotID = _robot == RobotType::MINI_CHEETAH ? window->setupMiniCheetah(truthColor, true, true)
-                                                    : window->setupCheetah3(truthColor, true, true);
-    _controllerRobotID = _robot == RobotType::MINI_CHEETAH
-                             ? window->setupMiniCheetah(seColor, false, false)
-                             : window->setupCheetah3(seColor, false, false);
+    
+    if (_robot == RobotType::MINI_CHEETAH)
+      _simRobotID = window->setupMiniCheetah(truthColor, true, true);
+    else if (_robot == RobotType::CHEETAH_3) 
+      _simRobotID = window->setupCheetah3(truthColor, true, true);
+    else if (_robot == RobotType::S2)
+      _simRobotID = window->setupS2(truthColor, true, true);
+
+    if (_robot == RobotType::MINI_CHEETAH)
+      _controllerRobotID = window->setupMiniCheetah(seColor, false, false);
+    else if (_robot == RobotType::CHEETAH_3) 
+      _controllerRobotID = window->setupCheetah3(seColor, false, false);
+    else if (_robot == RobotType::S2)
+      _controllerRobotID = window->setupS2(seColor, false, false);
   }
 
   // init rigid body dynamics
@@ -156,7 +170,7 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   printf("[Simulation] Setup low-level control...\n");
   // init spine:
   if (_robot == RobotType::MINI_CHEETAH) {
-    for (int leg = 0; leg < 4; leg++) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       _spineBoards[leg].init(Quadruped<float>::getSideSign(leg), leg);
       _spineBoards[leg].data = &_spiData;
       _spineBoards[leg].cmd = &_spiCommand;
@@ -165,7 +179,7 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
     }
   } else if (_robot == RobotType::CHEETAH_3) {
     // init ti board
-    for (int leg = 0; leg < 4; leg++) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       _tiBoards[leg].init(Quadruped<float>::getSideSign(leg));
       _tiBoards[leg].set_link_lengths(_quadruped._abadLinkLength,
                                       _quadruped._hipLinkLength,
@@ -339,7 +353,7 @@ void Simulation::step(double dt, double dtLowLevelControl,
 
   // actuator model:
   if (_robot == RobotType::MINI_CHEETAH) {
-    for (int leg = 0; leg < 4; leg++) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       for (int joint = 0; joint < 3; joint++) {
         _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
             _spineBoards[leg].torque_out[joint],
@@ -347,7 +361,7 @@ void Simulation::step(double dt, double dtLowLevelControl,
       }
     }
   } else if (_robot == RobotType::CHEETAH_3) {
-    for (int leg = 0; leg < 4; leg++) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       for (int joint = 0; joint < 3; joint++) {
         _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
             _tiBoards[leg].data->tau_des[joint],
@@ -378,7 +392,7 @@ void Simulation::step(double dt, double dtLowLevelControl,
 void Simulation::lowLevelControl() {
   if (_robot == RobotType::MINI_CHEETAH) {
     // update spine board data:
-    for (int leg = 0; leg < 4; leg++) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       _spiData.q_abad[leg] = _simulator->getState().q[leg * 3 + 0];
       _spiData.q_hip[leg] = _simulator->getState().q[leg * 3 + 1];
       _spiData.q_knee[leg] = _simulator->getState().q[leg * 3 + 2];
@@ -395,7 +409,7 @@ void Simulation::lowLevelControl() {
 
   } else if (_robot == RobotType::CHEETAH_3) {
     // update data
-    for (int leg = 0; leg < 4; leg++) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       for (int joint = 0; joint < 3; joint++) {
         _tiBoards[leg].data->q[joint] =
             _simulator->getState().q[leg * 3 + joint];
@@ -435,7 +449,7 @@ void Simulation::highLevelControl() {
   if (_robot == RobotType::MINI_CHEETAH) {
     _sharedMemory().simToRobot.spiData = _spiData;
   } else if (_robot == RobotType::CHEETAH_3) {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < _quadruped.num_leg; i++) {
       _sharedMemory().simToRobot.tiBoardData[i] = *_tiBoards[i].data;
     }
   } else {
@@ -475,7 +489,7 @@ void Simulation::highLevelControl() {
     // pretty_print(_spiCommand.q_des_hip, "q des hip", 4);
     // pretty_print(_spiCommand.q_des_knee, "q des knee", 4);
   } else if (_robot == RobotType::CHEETAH_3) {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < _quadruped.num_leg; i++) {
       _tiBoards[i].command = _sharedMemory().robotToSim.tiBoardCommand[i];
     }
   } else {
@@ -513,7 +527,7 @@ void Simulation::buildLcmMessage() {
     _simLCM.vbd[i] = dstate.dBodyVelocity[i + 3];
   }
 
-  for (size_t leg = 0; leg < 4; leg++) {
+  for (size_t leg = 0; leg < _quadruped.num_leg; leg++) {
     for (size_t joint = 0; joint < 3; joint++) {
       _simLCM.q[leg][joint] = state.q[leg * 3 + joint];
       _simLCM.qd[leg][joint] = state.qd[leg * 3 + joint];

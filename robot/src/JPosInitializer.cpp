@@ -14,7 +14,7 @@ JPosInitializer<T>::JPosInitializer(T end_time, float dt)
       _end_time(end_time),
       _curr_time(0.),
       _dt(dt),
-      _ini_jpos(cheetah::num_act_joint) {
+      _ini_jpos(cheetah::max_num_act_joint) {
   _UpdateParam();
 }
 
@@ -32,13 +32,13 @@ bool JPosInitializer<T>::IsInitialized(LegController<T>* ctrl) {
   
   // Smooth movement
   if (_curr_time < _end_time) {
-    T jpos[cheetah::num_act_joint];
+    T jpos[cheetah::max_num_act_joint];
     _jpos_trj.getCurvePoint(_curr_time, jpos);
 
-    // pretty_print(jpos, "jpos_cmd", cheetah::num_act_joint);
+    // pretty_print(jpos, "jpos_cmd", cheetah::max_num_act_joint);
 
-    for (size_t leg(0); leg < cheetah::num_leg; ++leg) {
-      for (size_t jidx(0); jidx < cheetah::num_leg_joint; ++jidx) {
+    for (size_t leg(0); leg < cheetah::max_num_leg; ++leg) {
+      for (size_t jidx(0); jidx < cheetah::max_num_leg_joint; ++jidx) {
         ctrl->commands[leg].tauFeedForward[jidx] = 0.;
         ctrl->commands[leg].qDes[jidx] = jpos[3 * leg + jidx];
         ctrl->commands[leg].qdDes[jidx] = 0.;
@@ -51,12 +51,12 @@ bool JPosInitializer<T>::IsInitialized(LegController<T>* ctrl) {
 
 template <typename T>
 void JPosInitializer<T>::_UpdateInitial(const LegController<T>* ctrl) {
-  T ini[3 * cheetah::num_act_joint];
-  T fin[3 * cheetah::num_act_joint];
+  T ini[3 * cheetah::max_num_act_joint];
+  T fin[3 * cheetah::max_num_act_joint];
   T** mid = new T*[1];
-  mid[0] = new T[cheetah::num_act_joint];
+  mid[0] = new T[cheetah::max_num_act_joint];
 
-  for (size_t i(cheetah::num_act_joint); i < 3 * cheetah::num_act_joint; ++i) {
+  for (size_t i(cheetah::max_num_act_joint); i < 3 * cheetah::max_num_act_joint; ++i) {
     ini[i] = 0.;
     fin[i] = 0.;
   }
@@ -68,7 +68,7 @@ void JPosInitializer<T>::_UpdateInitial(const LegController<T>* ctrl) {
     }
   }
 
-  for (size_t i(0); i < cheetah::num_act_joint; ++i) {
+  for (size_t i(0); i < cheetah::max_num_act_joint; ++i) {
     fin[i] = _target_jpos[i];
     mid[0][i] = _mid_jpos[i];
   }

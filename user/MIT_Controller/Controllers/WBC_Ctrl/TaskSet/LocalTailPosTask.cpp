@@ -10,7 +10,7 @@
 template <typename T>
 LocalTailPosTask<T>::LocalTailPosTask(const FloatingBaseModel<T>* robot)
     : Task<T>(3), _robot_sys(robot) {
-  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::dim_config);
+  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::max_dim_config);
   TK::JtDotQdot_ = DVec<T>::Zero(TK::dim_task_);
 
   _Kp_kin = DVec<T>::Constant(TK::dim_task_, 1.);

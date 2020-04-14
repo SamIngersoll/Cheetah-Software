@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "stdvector": "cpp",
+        "type_traits": "cpp"
+    }
+}

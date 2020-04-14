@@ -11,7 +11,7 @@
 template <typename T>
 LocalRollTask<T>::LocalRollTask(const FloatingBaseModel<T>* robot)
     : Task<T>(1), _robot_sys(robot) {
-  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::dim_config);
+  TK::Jt_ = DMat<T>::Zero(TK::dim_task_, cheetah::max_dim_config);
   TK::Jt_(0, 0) = 1.;
   TK::JtDotQdot_ = DVec<T>::Zero(TK::dim_task_);
 
