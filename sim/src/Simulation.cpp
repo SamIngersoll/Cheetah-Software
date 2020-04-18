@@ -188,6 +188,15 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
       _tiBoards[leg].reset_ti_board_data();
       _tiBoards[leg].run_ti_board_iteration();
     }
+  } else if (_robot == RobotType::S2) {
+    // init ti board
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
+     _spineBoards[leg].init(Quadruped<float>::getSideSign(leg), leg);
+      _spineBoards[leg].data = &_spiData;
+      _spineBoards[leg].cmd = &_spiCommand;
+      _spineBoards[leg].resetData();
+      _spineBoards[leg].resetCommand();
+    }
   } else {
     assert(false);
   }
@@ -210,6 +219,9 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   } else if (_robot == RobotType::CHEETAH_3) {
     _robotParams.initializeFromYamlFile(getConfigDirectoryPath() +
                                         CHEETAH_3_DEFAULT_PARAMETERS);
+  } else if (_robot == RobotType::S2) {
+    _robotParams.initializeFromYamlFile(getConfigDirectoryPath() +
+                                        S2_DEFAULT_PARAMETERS);
   } else {
     assert(false);
   }
