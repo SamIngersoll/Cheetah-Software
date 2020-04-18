@@ -43,20 +43,25 @@ void SimulationBridge::run() {
         }
       }
 
+      printf("[Simulation Driver DEBUG] got to 1...\n");
       // the simulator tells us which mode to run in
       _simMode = _sharedMemory().simToRobot.mode;
+      printf("[Simulation Driver DEBUG] got to 2...\n");
       switch (_simMode) {
         case SimulatorMode::RUN_CONTROL_PARAMETERS:  // there is a new control
           // parameter request
+          printf("[Simulation Driver DEBUG] got to run control params...\n");
           handleControlParameters();
           break;
         case SimulatorMode::RUN_CONTROLLER:  // the simulator is ready for the
           // next robot controller run
           _iterations++;
+          printf("[Simulation Driver DEBUG] got to run controllers...\n");
           runRobotControl();
           break;
         case SimulatorMode::DO_NOTHING:  // the simulator is just checking to see
           // if we are alive yet
+          printf("[Simulation Driver DEBUG] got to do nothing...\n");
           break;
         case SimulatorMode::EXIT:  // the simulator is done with us
           printf("[Simulation Driver] Transitioned to exit mode\n");
@@ -65,11 +70,13 @@ void SimulationBridge::run() {
         default:
           throw std::runtime_error("unknown simulator mode");
       }
-
+      printf("[Simulation Driver DEBUG] finished switch case...\n");
       // tell the simulator we are done
       _sharedMemory().robotIsDone();
+      printf("[Simulation Driver DEBUG] robot is done...\n");
     }
   } catch (std::exception& e) {
+    printf("[Simulation Driver] Caught exception...\n");
     strncpy(_sharedMemory().robotToSim.errorMessage, e.what(), sizeof(_sharedMemory().robotToSim.errorMessage));
     _sharedMemory().robotToSim.errorMessage[sizeof(_sharedMemory().robotToSim.errorMessage) - 1] = '\0';
     throw e;
@@ -92,14 +99,14 @@ void SimulationBridge::handleControlParameters() {
         "iteration, but there is no new request!\n");
     return;
   }
-
+  printf("[Simulation Driver DEBUG] handlecontrol params got to 1...\n");
   // sanity check
   u64 nRequests = request.requestNumber - response.requestNumber;
   assert(nRequests == 1);
 
   response.nParameters = _robotParams.collection._map
                              .size();  // todo don't do this every single time?
-
+  printf("[Simulation Driver DEBUG] handlecontrol params got to 2...\n");
   switch (request.requestKind) {
     case ControlParameterRequestKind::SET_ROBOT_PARAM_BY_NAME: {
       std::string name(request.name);
@@ -113,7 +120,7 @@ void SimulationBridge::handleControlParameters() {
             " but received a command to set it to " +
             controlParameterValueKindToString(request.parameterKind));
       }
-
+      printf("[Simulation Driver DEBUG] case1 handlecontrol params got to 1...\n");
       // do the actual set
       param.set(request.value, request.parameterKind);
 
@@ -126,13 +133,15 @@ void SimulationBridge::handleControlParameters() {
       strcpy(response.name,
              name.c_str());  // just for debugging print statements
       response.requestKind = request.requestKind;
-
+      printf("[Simulation Driver DEBUG] case1 handlecontrol params got to 2...\n");
       printf("%s\n", response.toString().c_str());
+      printf("[Simulation Driver DEBUG] case1 handlecontrol params got to 3...\n");
 
     } break;
-
+    
     case ControlParameterRequestKind::SET_USER_PARAM_BY_NAME: {
       std::string name(request.name);
+      printf("[Simulation Driver DEBUG] case2 handlecontrol params got to 1...\n");
       if(!_userParams) {
         printf("[Simulation Bridge] Warning: tried to set user parameter, but the robot does not have any!\n");
       } else {
@@ -146,11 +155,12 @@ void SimulationBridge::handleControlParameters() {
               " but received a command to set it to " +
               controlParameterValueKindToString(request.parameterKind));
         }
-
+        printf("[Simulation Driver DEBUG] case2 handlecontrol params got to 2...\n");
         // do the actual set
         param.set(request.value, request.parameterKind);
+        
       }
-
+      printf("[Simulation Driver DEBUG] case2 handlecontrol params got to 3...\n");
       // respond:
       response.requestNumber =
           request.requestNumber;  // acknowledge that the set has happened
@@ -160,11 +170,10 @@ void SimulationBridge::handleControlParameters() {
       strcpy(response.name,
              name.c_str());  // just for debugging print statements
       response.requestKind = request.requestKind;
-
+      printf("[Simulation Driver DEBUG] case2 handlecontrol params got to 4...\n");
       printf("%s\n", response.toString().c_str());
 
     } break;
-
     case ControlParameterRequestKind::GET_ROBOT_PARAM_BY_NAME: {
       std::string name(request.name);
       ControlParameter& param = _robotParams.collection.lookup(name);
@@ -193,6 +202,7 @@ void SimulationBridge::handleControlParameters() {
     default:
       throw std::runtime_error("unhandled get/set");
   }
+  printf("[Simulation Driver DEBUG] handlecontrol params got to END...\n");
 }
 
 /*!

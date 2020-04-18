@@ -34,7 +34,7 @@ bool Quadruped<T>::buildModel(FloatingBaseModel<T>& model) {
 
   Mat3<T> I3 = Mat3<T>::Identity();
 
-  // loop over 4 legs
+  // loop over legs
   for (int legID = 0; legID < num_leg; legID++) {
     // Ab/Ad joint
     //  int addBody(const SpatialInertia<T>& inertia, const SpatialInertia<T>&
@@ -43,8 +43,7 @@ bool Quadruped<T>::buildModel(FloatingBaseModel<T>& model) {
     //              const Mat6<T>& Xtree, const Mat6<T>& Xrot);
     bodyID++;
     Mat6<T> xtreeAbad = createSXform(I3, withLegSigns<T>(_abadLocation, legID));
-    Mat6<T> xtreeAbadRotor =
-        createSXform(I3, withLegSigns<T>(_abadRotorLocation, legID));
+    Mat6<T> xtreeAbadRotor = createSXform(I3, withLegSigns<T>(_abadRotorLocation, legID));
 
     if (sideSign < 0) {
       model.addBody(_abadInertia.flipAlongAxis(CoordinateAxis::Y),

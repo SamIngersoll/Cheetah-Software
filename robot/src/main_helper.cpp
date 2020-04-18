@@ -22,7 +22,7 @@ MasterConfig gMasterConfig;
 void printUsage() {
   printf(
       "Usage: robot [robot-id] [sim-or-robot] [parameters-from-file]\n"
-      "\twhere robot-id:     3 for cheetah 3, m for mini-cheetah\n"
+      "\twhere robot-id:     3 for cheetah 3, m for mini-cheetah, s for S2\n"
       "\t      sim-or-robot: s for sim, r for robot\n"
       "\t      param-file:   f for loading parameters from file, l (or nothing) for LCM\n"
       "                      this option can only be used in robot mode\n");
@@ -41,6 +41,8 @@ int main_helper(int argc, char** argv, RobotController* ctrl) {
     gMasterConfig._robot = RobotType::CHEETAH_3;
   } else if (argv[1][0] == 'm') {
     gMasterConfig._robot = RobotType::MINI_CHEETAH;
+    } else if (argv[1][0] == 's') {
+    gMasterConfig._robot = RobotType::S2;
   } else {
     printUsage();
     return EXIT_FAILURE;
@@ -82,6 +84,9 @@ int main_helper(int argc, char** argv, RobotController* ctrl) {
       simulationBridge.run();
       printf("[Quadruped] SimDriver run() has finished!\n");
     } else if (gMasterConfig._robot == RobotType::CHEETAH_3) {
+      SimulationBridge simulationBridge(gMasterConfig._robot, ctrl);
+      simulationBridge.run();
+    } else if (gMasterConfig._robot == RobotType::S2) {
       SimulationBridge simulationBridge(gMasterConfig._robot, ctrl);
       simulationBridge.run();
     } else {

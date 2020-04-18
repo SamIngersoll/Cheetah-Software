@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <vector>
 
+#include <stdio.h>
+
 class BoxInfo {
  public:
   double depth, width, height;
@@ -182,8 +184,19 @@ class DrawList {
                             bool updateOrigin = false) {
     for (size_t modelID = 5, graphicsID = id; modelID < model.getNumBodies();
          modelID++, graphicsID++) {
+      printf("[Draw List] update robot from model \n");
+      std::cout << "modelID " << modelID << "\n";
+      std::cout << "graphicsID " << graphicsID << "\n";
+      std::cout << "size of _kinematicXform " << _kinematicXform.size() << "\n";
+      std::cout << "numbodies " << model.getNumBodies() << "\n";
+      spatialTransformToQT(model.getModel()._Xa.at(modelID));
+      printf("Exists\n");
+      _kinematicXform.at(graphicsID);
+      printf("Also exists\n");
       _kinematicXform.at(graphicsID) =
           spatialTransformToQT(model.getModel()._Xa.at(modelID));
+      std::cout << "got xform \n";
+          
     }
 
     if (updateOrigin) {

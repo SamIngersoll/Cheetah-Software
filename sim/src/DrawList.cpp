@@ -16,7 +16,7 @@ void DrawList::loadFiles() {
       "mini_upper_link.obj", "mini_lower_link.obj",
       "sphere.obj",          "cube.obj",
       "s2_body.obj",         "s2_hip.obj",
-      "s2_leg.obj"};
+      "mini_abad.obj",       "s2_leg.obj"};
   for (const auto& name : names) {
     std::string filename = _baseFileName + name;
     _vertexData.emplace_back();
@@ -297,7 +297,12 @@ size_t DrawList::addS2(Vec4<float> color, bool useOld, bool canHide) {
     _kinematicXform.push_back(eye);
     _instanceColor.push_back(link1Color);
 
-    _nTotal += 2;
+    _objectMap.push_back(i0 + 3);
+    _canBeHidden.push_back(canHide);
+    _modelOffsets.push_back(lower);
+    _kinematicXform.push_back(eye);
+    _instanceColor.push_back(link2Color);
+    _nTotal += 3;
   }
 
   // printf("add mini cheetah (%d) id %ld\n", (int)canHide, j0);

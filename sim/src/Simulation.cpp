@@ -80,28 +80,32 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   // init rigid body dynamics
   printf("[Simulation] Build rigid body model...\n");
   _model = _quadruped.buildModel();
+  std::cout << "\nMODEL NDOF " << _model._nDof << "\n\n";
   _robotDataModel = _quadruped.buildModel();
+  std::cout << "\n_robotDataModel NDOF " << _model._nDof << "\n\n";
   _simulator =
       new DynamicsSimulator<double>(_model, (bool)_simParams.use_spring_damper);
   _robotDataSimulator = new DynamicsSimulator<double>(_robotDataModel, false);
 
-  DVec<double> zero12(12);
-  for (u32 i = 0; i < 12; i++) {
-    zero12[i] = 0.;
+
+
+  DVec<double> zeroV((int)_quadruped.num_act_joint);
+  for (u32 i = 0; i < _quadruped.num_act_joint; i++) {
+    zeroV[i] = 0.;
   }
 
   // set some sane defaults:
-  _tau = zero12;
-  _robotControllerState.q = zero12;
-  _robotControllerState.qd = zero12;
+  _tau = zeroV;
+  _robotControllerState.q = zeroV;
+  _robotControllerState.qd = zeroV;
   FBModelState<double> x0;
   x0.bodyOrientation = rotationMatrixToQuaternion(
       ori::coordinateRotation(CoordinateAxis::Z, 0.));
   // Mini Cheetah
   x0.bodyPosition.setZero();
   x0.bodyVelocity.setZero();
-  x0.q = zero12;
-  x0.qd = zero12;
+  x0.q = zeroV;
+  x0.qd = zeroV;
 
   // Mini Cheetah Initial Posture
   // x0.bodyPosition[2] = -0.49;
@@ -146,22 +150,24 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
 
   // Cheetah lies on the ground
   //x0.bodyPosition[2] = -0.45;
-  x0.bodyPosition[2] = 0.05;
-  x0.q[0] = -0.7;
-  x0.q[1] = 1.;
-  x0.q[2] = 2.715;
+  if (_robot == RobotType::MINI_CHEETAH || _robot == RobotType::CHEETAH_3) {
+    x0.bodyPosition[2] = 0.05;
+    x0.q[0] = -0.7;
+    x0.q[1] = 1.;
+    x0.q[2] = 2.715;
 
-  x0.q[3] = 0.7;
-  x0.q[4] = 1.;
-  x0.q[5] = 2.715;
+    x0.q[3] = 0.7;
+    x0.q[4] = 1.;
+    x0.q[5] = 2.715;
 
-  x0.q[6] = -0.7;
-  x0.q[7] = -1.0;
-  x0.q[8] = -2.715;
+    x0.q[6] = -0.7;
+    x0.q[7] = -1.0;
+    x0.q[8] = -2.715;
 
-  x0.q[9] = 0.7;
-  x0.q[10] = -1.0;
-  x0.q[11] = -2.715;
+    x0.q[9] = 0.7;
+    x0.q[10] = -1.0;
+    x0.q[11] = -2.715;
+  }
 
 
   setRobotState(x0);
@@ -247,6 +253,7 @@ void Simulation::sendControlParameter(const std::string& name,
   ControlParameterResponse& response =
       _sharedMemory().robotToSim.controlParameterResponse;
 
+  printf("[Simulation DEBUG] start send control parameters\n");
   // first check no pending message
   assert(request.requestNumber == response.requestNumber);
 
@@ -281,6 +288,7 @@ void Simulation::sendControlParameter(const std::string& name,
   assert(response.requestNumber == request.requestNumber);
   assert(response.parameterKind == request.parameterKind);
   assert(std::string(response.name) == request.name);
+  printf("[Simulation DEBUG] end send control parameters\n");
 }
 
 /*!
@@ -309,6 +317,7 @@ void Simulation::handleControlError() {
  * here that blocks on having the robot connected.
  */
 void Simulation::firstRun() {
+  printf("[Simulation DEBUG] start first run\n");
   // connect to robot
   _robotMutex.lock();
   _sharedMemory().simToRobot.mode = SimulatorMode::DO_NOTHING;
@@ -341,6 +350,7 @@ void Simulation::firstRun() {
     sendControlParameter(kv.first, kv.second->get(kv.second->_kind),
                          kv.second->_kind, true);
   }
+  printf("[Simulation DEBUG] end first run\n");
 }
 
 /*!
@@ -348,6 +358,7 @@ void Simulation::firstRun() {
  */
 void Simulation::step(double dt, double dtLowLevelControl,
                       double dtHighLevelControl) {
+  printf("[Simulation DEBUG] start step\n");
   // Low level control (if needed)
   if (_currentSimTime >= _timeOfNextLowLevelControl) {
     lowLevelControl();
@@ -380,6 +391,14 @@ void Simulation::step(double dt, double dtLowLevelControl,
             _simulator->getState().qd[leg * 3 + joint]);
       }
     }
+  } else if (_robot == RobotType::S2) {
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
+      for (int joint = 0; joint < 3; joint++) {
+        _tau[leg * 3 + joint] = _actuatorModels[joint].getTorque(
+            _spineBoards[leg].torque_out[joint],
+            _simulator->getState().qd[leg * 3 + joint]);
+      }
+    }
   } else {
     assert(false);
   }
@@ -399,10 +418,28 @@ void Simulation::step(double dt, double dtLowLevelControl,
   _simulator->setHoming(homing);
 
   _simulator->step(dt, _tau, _simParams.floor_kp, _simParams.floor_kd);
+  printf("[Simulation DEBUG] end step\n");
 }
 
 void Simulation::lowLevelControl() {
+  printf("[Simulation DEBUG] start low level control\n");
   if (_robot == RobotType::MINI_CHEETAH) {
+    // update spine board data:
+    for (int leg = 0; leg < _quadruped.num_leg; leg++) {
+      _spiData.q_abad[leg] = _simulator->getState().q[leg * 3 + 0];
+      _spiData.q_hip[leg] = _simulator->getState().q[leg * 3 + 1];
+      _spiData.q_knee[leg] = _simulator->getState().q[leg * 3 + 2];
+
+      _spiData.qd_abad[leg] = _simulator->getState().qd[leg * 3 + 0];
+      _spiData.qd_hip[leg] = _simulator->getState().qd[leg * 3 + 1];
+      _spiData.qd_knee[leg] = _simulator->getState().qd[leg * 3 + 2];
+    }
+
+    // run spine board control:
+    for (auto& spineBoard : _spineBoards) {
+      spineBoard.run();
+    }
+  } else if (_robot == RobotType::S2) {
     // update spine board data:
     for (int leg = 0; leg < _quadruped.num_leg; leg++) {
       _spiData.q_abad[leg] = _simulator->getState().q[leg * 3 + 0];
@@ -437,11 +474,13 @@ void Simulation::lowLevelControl() {
   } else {
     assert(false);
   }
+  printf("[Simulation DEBUG] end low level control\n");
 }
 
 
 
 void Simulation::highLevelControl() {
+  printf("[Simulation DEBUG] start high level control\n");
   // send joystick data to robot:
   _sharedMemory().simToRobot.gamepadCommand = _window->getDriverCommand();
   _sharedMemory().simToRobot.gamepadCommand.applyDeadband(
@@ -459,6 +498,8 @@ void Simulation::highLevelControl() {
 
   // send leg data to robot
   if (_robot == RobotType::MINI_CHEETAH) {
+    _sharedMemory().simToRobot.spiData = _spiData;
+  } else if (_robot == RobotType::S2) {
     _sharedMemory().simToRobot.spiData = _spiData;
   } else if (_robot == RobotType::CHEETAH_3) {
     for (int i = 0; i < _quadruped.num_leg; i++) {
@@ -500,6 +541,12 @@ void Simulation::highLevelControl() {
     // pretty_print(_spiCommand.q_des_abad, "q des abad", 4);
     // pretty_print(_spiCommand.q_des_hip, "q des hip", 4);
     // pretty_print(_spiCommand.q_des_knee, "q des knee", 4);
+  } else if (_robot == RobotType::S2) {
+    _spiCommand = _sharedMemory().robotToSim.spiCommand;
+
+    // pretty_print(_spiCommand.q_des_abad, "q des abad", 4);
+    // pretty_print(_spiCommand.q_des_hip, "q des hip", 4);
+    // pretty_print(_spiCommand.q_des_knee, "q des knee", 4);
   } else if (_robot == RobotType::CHEETAH_3) {
     for (int i = 0; i < _quadruped.num_leg; i++) {
       _tiBoards[i].command = _sharedMemory().robotToSim.tiBoardCommand[i];
@@ -509,9 +556,11 @@ void Simulation::highLevelControl() {
   }
 
   _highLevelIterations++;
+  printf("[Simulation DEBUG] end high level control\n");
 }
 
 void Simulation::buildLcmMessage() {
+  printf("[Simulation DEBUG] start build lcm message\n");
   _simLCM.time = _currentSimTime;
   _simLCM.timesteps = _highLevelIterations;
   auto& state = _simulator->getState();
@@ -550,6 +599,7 @@ void Simulation::buildLcmMessage() {
       _simLCM.f_foot[leg][joint] = _simulator->getContactForce(gcID)[joint];
     }
   }
+  printf("[Simulation DEBUG] end build lcm message\n");
 }
 
 /*!
@@ -620,6 +670,7 @@ void Simulation::addCollisionMesh(double mu, double resti, double grid_size,
  */
 void Simulation::runAtSpeed(std::function<void(std::string)> errorCallback, bool graphics) {
   _errorCallback = errorCallback;
+  printf("[Simulation DEBUG] start run at speed\n");
   firstRun();  // load the control parameters
 
   // if we requested to stop, stop.
@@ -679,6 +730,7 @@ void Simulation::runAtSpeed(std::function<void(std::string)> errorCallback, bool
         desiredSteps += nStepsPerFrame;
     }
   }
+  printf("[Simulation DEBUG] end run at speed\n");
 }
 
 void Simulation::loadTerrainFile(const std::string& terrainFileName,
@@ -849,20 +901,33 @@ void Simulation::loadTerrainFile(const std::string& terrainFileName,
 }
 
 void Simulation::updateGraphics() {
+  printf("[Simulation DEBUG] start update graphics\n");
   _robotControllerState.bodyOrientation =
       _sharedMemory().robotToSim.mainCheetahVisualization.quat.cast<double>();
   _robotControllerState.bodyPosition =
       _sharedMemory().robotToSim.mainCheetahVisualization.p.cast<double>();
-  for (int i = 0; i < 12; i++)
+  printf("[Simulation DEBUG] done pulling from shared mem\n");
+  for (int i = 0; i < _quadruped.num_act_joint; i++)
     _robotControllerState.q[i] =
         _sharedMemory().robotToSim.mainCheetahVisualization.q[i];
+  printf("[Simulation DEBUG] done copying robotcontrolstate from shared mem (loop)\n");
   _robotDataSimulator->setState(_robotControllerState);
+  printf("[Simulation DEBUG] done setting state\n");
   _robotDataSimulator->forwardKinematics();  // calc all body positions
+  printf("[Simulation DEBUG] done forward kinematics\n");
+  std::cout << "\nID = " << _simRobotID << "\n\n";
   _window->_drawList.updateRobotFromModel(*_simulator, _simRobotID, true);
+  
+  printf("[Simulation DEBUG] done updating robot from model 1\n");
+  std::cout << "\nID = " << _controllerRobotID << "\n\n";
   _window->_drawList.updateRobotFromModel(*_robotDataSimulator,
                                           _controllerRobotID, false);
+  
+  printf("[Simulation DEBUG] done updating robot from model 2\n");
   _window->_drawList.updateAdditionalInfo(*_simulator);
+  printf("[Simulation DEBUG] done updating additional info\n");
   _window->update();
+  printf("[Simulation DEBUG] end update graphics\n");
 }
 
 
