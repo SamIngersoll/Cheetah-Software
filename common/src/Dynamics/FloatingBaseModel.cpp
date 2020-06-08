@@ -844,6 +844,7 @@ void FloatingBaseModel<T>::forwardAccelerationKinematics() {
 template <typename T>
 DVec<T> FloatingBaseModel<T>::inverseDynamics(
     const FBModelStateDerivative<T> &dState) {
+
   setDState(dState);
   forwardAccelerationKinematics();
 
@@ -873,6 +874,7 @@ DVec<T> FloatingBaseModel<T>::inverseDynamics(
     _f[_parents[i]] += _Xuprot[i].transpose() * _frot[i];
   }
   genForce.template head<6>() = _f[5];
+
   return genForce;
 }
 

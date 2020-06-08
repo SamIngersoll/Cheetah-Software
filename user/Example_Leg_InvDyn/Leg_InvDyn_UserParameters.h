@@ -6,11 +6,14 @@
 class Leg_InvDyn_UserParameters : public ControlParameters {
 public:
   Leg_InvDyn_UserParameters()
-      : ControlParameters("user-parameters"),
-        INIT_PARAMETER(num_moving_legs)
+      : ControlParameters("user-parameters"),        
+        INIT_PARAMETER(num_moving_legs),
+        INIT_PARAMETER(num_legs)
       {}
 
+  
   DECLARE_PARAMETER(double, num_moving_legs);
+  DECLARE_PARAMETER(double, num_legs);
 };
 
 #endif //PROJECT_LEGINVDYNSUSERPARAMETERS_H

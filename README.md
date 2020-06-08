@@ -71,3 +71,6 @@ s: simulation, r: robot
 - `libblas-dev liblapack-dev`
 
 To use Ipopt, use CMake Ipopt option. Ex) cmake -DIPOPT_OPTION=ON ..
+
+## Troubleshooting
+- Sometimes LCM doesn't work well when the WiFi is on. This can cause lag and buginess in simulator. If this is the case follow steps here: https://lcm-proj.github.io/multicast_setup.html

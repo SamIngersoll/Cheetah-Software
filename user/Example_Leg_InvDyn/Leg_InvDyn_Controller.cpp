@@ -10,7 +10,6 @@ void Leg_InvDyn_Controller::runController(){
   // This section eventually won't be needed after state estimate
   // is auto propagated to the model
   // {
-  
   FBModelState<float> state;
   
   state.bodyOrientation = _stateEstimate->orientation;
@@ -21,7 +20,7 @@ void Leg_InvDyn_Controller::runController(){
   state.q.setZero(12);
   state.qd.setZero(12);
 
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < userParameters.num_legs; ++i) {
     state.q(3*i+0) = _legController->datas[i].q[0];
     state.q(3*i+1) = _legController->datas[i].q[1];
     state.q(3*i+2) = _legController->datas[i].q[2];
@@ -63,37 +62,78 @@ void Leg_InvDyn_Controller::runController(){
   qDes(0)*=-1; qdDes(0)*=-1; qddDes(0)*=-1;
   qDes(6)*=-1; qdDes(6)*=-1; qddDes(6)*=-1;
 
-
   // Construct commanded acceleration
   FBModelStateDerivative<float> commandedAccleration;
   commandedAccleration.dBodyVelocity.setZero();
   commandedAccleration.qdd = qddDes + 25*(qdDes - state.qd) + 150*(qDes - state.q);
- 
-  // Run RNEA inverse dynamics
-  Vec18<float> generalizedForce = _model->inverseDynamics(commandedAccleration); // [base_force ; joint_torques]
-  Vec12<float> jointTorques = generalizedForce.tail(12); // prune away base force
 
+  if (userParameters.num_legs == 2) { // using s2
 
-  // Alternate strategy: Assemble equations of motion
-  Mat18<float> H;
-  Vec18<float> Cqd, tau_grav;
+    // Run RNEA inverse dynamics
+    Vec12<float> generalizedForce = _model->inverseDynamics(commandedAccleration); // [base_force ; joint_torques]
+
+    Vec6<float> jointTorques = generalizedForce.tail(6); // prune away base force
+
+    // Alternate strategy: Assemble equations of motion
+    Mat12<float> H;
+    Vec12<float> Cqd, tau_grav;
   
-  H = _model->massMatrix();
-  Cqd = _model->generalizedCoriolisForce();
-  tau_grav = _model->generalizedGravityForce();
+    H = _model->massMatrix();
+    Cqd = _model->generalizedCoriolisForce();
+    tau_grav = _model->generalizedGravityForce();
 
-  Vec18<float> generalizedAcceleration;
-  generalizedAcceleration.head(6)  = commandedAccleration.dBodyVelocity;
-  generalizedAcceleration.tail(12) = commandedAccleration.qdd;
-  Vec18<float> generalizedForce2 = H*generalizedAcceleration + Cqd + tau_grav;
+    Vec12<float> generalizedAcceleration;
+    generalizedAcceleration.head(6)  = commandedAccleration.dBodyVelocity;
 
-  // Make sure they match
-  Vec18<float> err = generalizedForce - generalizedForce2;
-  assert( err.norm() < 1e-4 );
+    // generalizedAcceleration.tail(6) = commandedAccleration.qdd;
+    generalizedAcceleration.tail(6) = commandedAccleration.qdd.head(6); // just use accelerations from first two legs
 
-  // Send joint torques to leg controllers
-  int dof = 0;
-  for(int leg(0); leg<4; ++leg){
+    Vec12<float> generalizedForce2 = H*generalizedAcceleration + Cqd + tau_grav;
+
+    // Make sure they match
+    Vec12<float> err = generalizedForce - generalizedForce2;
+    assert( err.norm() < 1e-4 );
+
+    // Send joint torques to leg controllers
+    int dof = 0;
+    for(int leg(0); leg<userParameters.num_legs; ++leg){
+    for(int jidx(0); jidx<3; ++jidx){
+      _legController->commands[leg].qDes[jidx] = 0;
+      _legController->commands[leg].qdDes[jidx] = 0.;
+      _legController->commands[leg].tauFeedForward[jidx] = jointTorques(dof);
+      dof++;
+    }
+
+    _legController->commands[leg].kpJoint = Mat3<float>::Zero();
+    _legController->commands[leg].kdJoint = Mat3<float>::Zero();
+  }
+
+  } else { // using mini cheetah or cheetah 3
+
+    // Run RNEA inverse dynamics
+    Vec18<float> generalizedForce = _model->inverseDynamics(commandedAccleration); // [base_force ; joint_torques]
+    Vec12<float> jointTorques = generalizedForce.tail(12); // prune away base force
+
+    // Alternate strategy: Assemble equations of motion
+    Mat18<float> H;
+    Vec18<float> Cqd, tau_grav;
+  
+    H = _model->massMatrix();
+    Cqd = _model->generalizedCoriolisForce();
+    tau_grav = _model->generalizedGravityForce();
+
+    Vec18<float> generalizedAcceleration;
+    generalizedAcceleration.head(6)  = commandedAccleration.dBodyVelocity;
+    generalizedAcceleration.tail(12) = commandedAccleration.qdd;
+    Vec18<float> generalizedForce2 = H*generalizedAcceleration + Cqd + tau_grav;
+
+    // Make sure they match
+    Vec18<float> err = generalizedForce - generalizedForce2;
+    assert( err.norm() < 1e-4 );
+
+    // Send joint torques to leg controllers
+    int dof = 0;
+    for(int leg(0); leg<userParameters.num_legs; ++leg){
     for(int jidx(0); jidx<3; ++jidx){
       _legController->commands[leg].qDes[jidx] = 0;
       _legController->commands[leg].qdDes[jidx] = 0.;
@@ -103,4 +143,8 @@ void Leg_InvDyn_Controller::runController(){
     _legController->commands[leg].kpJoint = Mat3<float>::Zero();
     _legController->commands[leg].kdJoint = Mat3<float>::Zero();
   }
+  }
+  
+
+
 }

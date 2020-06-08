@@ -244,22 +244,35 @@ size_t DrawList::addS2(Vec4<float> color, bool useOld, bool canHide) {
 
   // body
   bodyOffset.setToIdentity();
-  bodyOffset.translate( 0, 0, .1f);
-  bodyOffset.rotate( -90, 0, 1, 0);
+  // bodyOffset.translate( 0, 0, .1f);
+  // bodyOffset.rotate( -90, 0, 1, 0);
 
   // abads (todo, check these)
+  // abadOffsets[0].setToIdentity();  // n
+  // abadOffsets[0].rotate(-90, 0, 0, 1);
+  // abadOffsets[0].rotate(180, 0, 1, 0);
+  // abadOffsets[0].rotate(-90, 1, 0, 0);
+
+  // abadOffsets[1].setToIdentity();  // p
+  // abadOffsets[1].rotate(-90, 0, 0, 1);
+  // abadOffsets[1].rotate(-90, 1, 0, 0);
+
+  // abads (mini cheetah version)
   abadOffsets[0].setToIdentity();  // n
   abadOffsets[0].rotate(-90, 0, 0, 1);
+  abadOffsets[0].rotate(0,-0.0565f, 0);
   abadOffsets[0].rotate(180, 0, 1, 0);
-  abadOffsets[0].rotate(-90, 1, 0, 0);
 
-  abadOffsets[1].setToIdentity();  // p
+  abadOffsets[1].setToIdentity();  // n
   abadOffsets[1].rotate(-90, 0, 0, 1);
-  abadOffsets[1].rotate(-90, 1, 0, 0);
+  abadOffsets[1].rotate(0,-0.0565f, 0);
+  abadOffsets[1].rotate(0, 0, 1, 0);
+
 
   // upper
   upper.setToIdentity();
-  upper.rotate(-90, 1, 0, 0);
+  // upper.rotate(-90, 1, 0, 0);
+  upper.rotate(-90, 0, 1, 0);
 
   // lower
   lower.setToIdentity();

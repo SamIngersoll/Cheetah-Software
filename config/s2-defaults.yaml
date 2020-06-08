@@ -11,8 +11,8 @@ stand_kp_cartesian: [50, 50, 50]
 #stand_kd_cartesian: [0.0, 0.0, 0.0]
 #stand_kp_cartesian: [0,0,0]
 testValue         : 23
-cheater_mode      : 0
-#cheater_mode      : 1
+#cheater_mode      : 0
+cheater_mode      : 1
 foot_height_sensor_noise      :  0.001
 foot_process_noise_position   :  0.002
 foot_sensor_noise_position    :  0.001
@@ -23,5 +23,5 @@ kpCOM: [50,50,50]
 kdCOM: [10,10,10]
 kpBase: [300,200,100]
 kdBase: [20,10,10]
-use_rc: 1
+use_rc: 0
 #use_rc: 0
