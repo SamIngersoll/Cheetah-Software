@@ -148,6 +148,9 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
   // x0.q[10] = -0.72;
   // x0.q[11] = 1.715;
 
+  printf("[Simulation] Setting initial state...\n");
+
+  // Initial position
   // Cheetah lies on the ground
   //x0.bodyPosition[2] = -0.45;
   if (_robot == RobotType::MINI_CHEETAH || _robot == RobotType::CHEETAH_3) {
@@ -167,8 +170,27 @@ Simulation::Simulation(RobotType robot, Graphics3D* window,
     x0.q[9] = 0.7;
     x0.q[10] = -1.0;
     x0.q[11] = -2.715;
+  } else if (_robot == RobotType::S2 ) {
+    x0.bodyPosition[2] = 0.4;
+    x0.bodyOrientation[2] = 3.1415/4+0.5;
+    x0.q[0] = -0.1;
+    x0.q[1] = 0.2;
+    x0.q[2] = 2.715;
+
+    x0.q[3] = 0.1;
+    x0.q[4] = 0.2;
+    x0.q[5] = 2.715;
+
+    // x0.q[6] = -0.7;
+    // x0.q[7] = -1.0;
+    // x0.q[8] = -2.715;
+
+    // x0.q[9] = 0.7;
+    // x0.q[10] = -1.0;
+    // x0.q[11] = -2.715;
   }
 
+  printf("[Simulation] Finished setting initial state...\n");
 
   setRobotState(x0);
   _robotDataSimulator->setState(x0);
